@@ -27,7 +27,7 @@ A simple Python application that automatically organizes files in a directory by
 ### Running the Application
 
 ```bash
-python "file sorter.py"
+python "filesorter.py"
 ```
 
 ### Using the GUI
