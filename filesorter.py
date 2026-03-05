@@ -5,6 +5,16 @@ import tkinter as tk
 from tkinter import filedialog, font  
 from tkinter import ttk
 
+
+def set_app_user_model_id(app_id="grassrune.file.sorter"):
+    try:
+        import ctypes
+
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
+    except Exception:
+        pass
+
+
 def sort_files_by_extension(directory_path):
     directory = os.path.abspath(directory_path)
     if not os.path.isdir(directory):
@@ -196,7 +206,6 @@ class FileSorterApp:
 
         self._apply_icon()
         self._apply_theme()
-        # Apply titlebar darkening after the window is realized so HWND is valid.
         self.root.after(50, self._apply_dark_titlebar)
 
         top = ttk.Frame(root, padding=(18, 14, 18, 6))
@@ -261,7 +270,6 @@ class FileSorterApp:
 
     def _apply_theme(self):
         style = ttk.Style()
-        # Force a theme that respects custom colors on Windows.
         for theme in ("clam", "vista", "default"):
             try:
                 style.theme_use(theme)
@@ -318,7 +326,6 @@ class FileSorterApp:
         style.map("TScrollbar", background=[("active", c["accent_hover"]), ("!active", c["border"])])
 
     def _apply_dark_titlebar(self):
-        """Best-effort Windows dark title bar. Safe no-op on other platforms."""
         try:
             import ctypes
 
@@ -339,7 +346,6 @@ class FileSorterApp:
                     ctypes.sizeof(value),
                 )
 
-            # First try the newer attribute, then the older one.
             try:
                 _dwm_set(DWMWA_USE_IMMERSIVE_DARK_MODE)
             except Exception:
@@ -348,7 +354,6 @@ class FileSorterApp:
                 except Exception:
                     pass
 
-            # Additional hint via SetWindowCompositionAttribute (Windows 11+).
             try:
                 class WINDOWCOMPOSITIONATTRIBDATA(ctypes.Structure):
                     _fields_ = [
@@ -367,7 +372,6 @@ class FileSorterApp:
             except Exception:
                 pass
         except Exception:
-            # Non-Windows or unsupported; ignore silently.
             pass
 
     def _apply_icon(self):
@@ -376,8 +380,12 @@ class FileSorterApp:
             icon_path = os.path.join(current_dir, "app.ico")
             if os.path.exists(icon_path):
                 self.root.iconbitmap(default=icon_path)
+                try:
+                    self._icon_image = tk.PhotoImage(file=icon_path)
+                    self.root.iconphoto(True, self._icon_image)
+                except Exception:
+                    pass
         except Exception:
-            # If icon loading fails, continue without crashing.
             pass
 
     def browse_directory(self):
@@ -418,6 +426,7 @@ class FileSorterApp:
         self.results_text.configure(state=tk.NORMAL)
 
 if __name__ == "__main__":
+    set_app_user_model_id()
     root = tk.Tk()
     app = FileSorterApp(root)
     root.mainloop()
